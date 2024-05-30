@@ -13,48 +13,86 @@ class Dispatcher:
     def __init__(self):
         self.webServer = None
         self.timer = None
+        self.timerAction = None
         self.video = None
         # self.serial = None
         self.request = RequestControl()
         self.command = MArmCommand()
         self.armInfo = {"x": 0, "y": 0, "z": 0}
+        # 当前运动状态 True动作执行中  False动作停止
+        self.actionStatus = False
 
     # 接收到web端消息
-    def webMessageHandle(self, data):
+    def webMessageHandle(self, data, isAction):
         # print(f'dispatcher web: {data}')
         command = ""
         if data == 'info':
             command = self.command.get_info()
             # print(command)
         # up: 0, right: 1, down: 2, left: 3, front: 4, back: 5
-        if data == "4":
-            self.armInfo['x'] += 1
-            command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        if data == "5":
-            self.armInfo['x'] -= 1
-            command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        if data == "3":
-            self.armInfo['y'] += 1
-            command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-            # print(command)
-        if data == "1":
-            self.armInfo['y'] -= 3
-            command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        if data == "0":
-            self.armInfo['z'] += 1
-            command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        if data == "2":
-            self.armInfo['z'] -= 1
-            command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        commandURL = parse.quote(command)
-        # print("command====>" + command + "|||" + commandURL)
-        motoData = self.request.sendControl(commandURL)
-        if type(motoData) is dict:
-            self.mArmMessageHandle(motoData)
+        # if data == "4":
+        #     self.armInfo['x'] += 1
+        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+        # if data == "5":
+        #     self.armInfo['x'] -= 1
+        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+        # if data == "3":
+        #     self.armInfo['y'] += 1
+        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+        #     # print(command)
+        # if data == "1":
+        #     self.armInfo['y'] -= 3
+        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+        # if data == "0":
+        #     self.armInfo['z'] += 1
+        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+        # if data == "2":
+        #     self.armInfo['z'] -= 1
+        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+        if isAction is True:
+            print(f"action dispatcher {data} {isAction}")
+            self.actionStatus = True
+            self.actionGo(data)
+        else:
+            commandURL = parse.quote(command)
+            # print("command====>" + command + "|||" + commandURL)
+            motoData = self.request.sendControl(commandURL)
+            if type(motoData) is dict:
+                self.mArmMessageHandle(motoData)
         # self.serial.sendMsg(command)
         # self.webServer.sendWebMessage('broadcast', {"msg":"get messge"})
 
-    # 接收到机械臂消息
+    def actionStop(self, type):
+        self.actionStatus = False
+
+    def actionGo(self, type):
+        command = ""
+        if self.actionStatus is True:
+            if type == "4":
+                self.armInfo['x'] += 1
+                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+            if type == "5":
+                self.armInfo['x'] -= 1
+                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+            if type == "3":
+                self.armInfo['y'] += 1
+                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+                # print(command)
+            if type == "1":
+                self.armInfo['y'] -= 3
+                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+            if type == "0":
+                self.armInfo['z'] += 1
+                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+            if type == "2":
+                self.armInfo['z'] -= 1
+                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+            commandURL = parse.quote(command)
+            self.request.sendControl(commandURL)
+            self.timerAction = Timer(1, self.actionGo, args=[type])#0.02
+            self.timerAction.start()
+
+    # 接收到机械臂当前状态信息消息
     def mArmMessageHandle(self, data):
         if data and len(data) > 5:
             #  json.loads(data)

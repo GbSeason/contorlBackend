@@ -8,6 +8,7 @@ class webServer:
         self.port = 5000
         self.socketio = None
         self.video_factory = videor
+        self.dispatcher = dispatcher
         self.handle = dispatcher.webMessageHandle
         dispatcher.webServer = self
 
@@ -41,18 +42,22 @@ class webServer:
 
         @socketio.on('message')
         def getMessage(data):
-            self.handle(data)
+            self.handle(data, False)
 
         @socketio.on('action')
         def getMessageOnAction(data):
-            self.handle(data)
+            self.handle(data, True)
+
+        @socketio.on('stopAction')
+        def getMessageOnAction(data):
+            self.dispatcher.actionStop(data)
 
         #     ===============其他操作
 
         @socketio.on('send')
         def verify_client_send(data):
             # client = client_dict[request.sid]
-            self.handle(data)
+            self.handle(data, False)
             # emit('broadcast', {"msg": data, "sid": request.sid}, broadcast=True)
             # print(client)
             # if(client["name"]):
