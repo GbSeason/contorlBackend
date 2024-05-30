@@ -7,7 +7,7 @@ from web_server import startServer
 from requestControl.RequestControl import RequestControl
 from threading import Timer
 from urllib import parse
-
+from pygame import time
 
 class Dispatcher:
     def __init__(self):
@@ -28,68 +28,38 @@ class Dispatcher:
         command = ""
         if data == 'info':
             command = self.command.get_info()
-            # print(command)
-        # up: 0, right: 1, down: 2, left: 3, front: 4, back: 5
-        # if data == "4":
-        #     self.armInfo['x'] += 1
-        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        # if data == "5":
-        #     self.armInfo['x'] -= 1
-        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        # if data == "3":
-        #     self.armInfo['y'] += 1
-        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        #     # print(command)
-        # if data == "1":
-        #     self.armInfo['y'] -= 3
-        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        # if data == "0":
-        #     self.armInfo['z'] += 1
-        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-        # if data == "2":
-        #     self.armInfo['z'] -= 1
-        #     command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
         if isAction is True:
             print(f"action dispatcher {data} {isAction}")
             self.actionStatus = True
             self.actionGo(data)
         else:
             commandURL = parse.quote(command)
-            # print("command====>" + command + "|||" + commandURL)
             motoData = self.request.sendControl(commandURL)
             if type(motoData) is dict:
                 self.mArmMessageHandle(motoData)
-        # self.serial.sendMsg(command)
-        # self.webServer.sendWebMessage('broadcast', {"msg":"get messge"})
 
-    def actionStop(self, type):
+    def actionStop(self, typeName):
         self.actionStatus = False
 
-    def actionGo(self, type):
+    def actionGo(self, typeName):
         command = ""
         if self.actionStatus is True:
-            if type == "4":
+            if typeName == "4":
                 self.armInfo['x'] += 1
-                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-            if type == "5":
+            if typeName == "5":
                 self.armInfo['x'] -= 1
-                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-            if type == "3":
+            if typeName == "3":
                 self.armInfo['y'] += 1
-                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-                # print(command)
-            if type == "1":
+            if typeName == "1":
                 self.armInfo['y'] -= 3
-                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-            if type == "0":
+            if typeName == "0":
                 self.armInfo['z'] += 1
-                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
-            if type == "2":
+            if typeName == "2":
                 self.armInfo['z'] -= 1
-                command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
+            command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
             commandURL = parse.quote(command)
             self.request.sendControl(commandURL)
-            self.timerAction = Timer(1, self.actionGo, args=[type])#0.02
+            self.timerAction = Timer(100/1000, self.actionGo, args=[typeName])  # 0.02
             self.timerAction.start()
 
     # 接收到机械臂当前状态信息消息
