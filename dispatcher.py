@@ -1,13 +1,14 @@
 import json
+import time
 from video_get import videoGet
 from target_recognition import getApplesDetector
 # from serial_connect.SerialControl import Serials
 from serial_connect.MArmControl import MArmCommand
 from web_server import startServer
 from requestControl.RequestControl import RequestControl
-from threading import Timer
+from threading import Timer, Thread
 from urllib import parse
-from pygame import time
+
 
 class Dispatcher:
     def __init__(self):
@@ -29,9 +30,10 @@ class Dispatcher:
         if data == 'info':
             command = self.command.get_info()
         if isAction is True:
-            print(f"action dispatcher {data} {isAction}")
             self.actionStatus = True
-            self.actionGo(data)
+            threadAG = Thread(target=self.actionGo, args=[data])
+            threadAG.start()
+            # self.actionGo(data)
         else:
             commandURL = parse.quote(command)
             motoData = self.request.sendControl(commandURL)
@@ -43,24 +45,25 @@ class Dispatcher:
 
     def actionGo(self, typeName):
         command = ""
+        step = 5
         if self.actionStatus is True:
             if typeName == "4":
-                self.armInfo['x'] += 1
+                self.armInfo['x'] += step
             if typeName == "5":
-                self.armInfo['x'] -= 1
+                self.armInfo['x'] -= step
             if typeName == "3":
-                self.armInfo['y'] += 1
+                self.armInfo['y'] += step
             if typeName == "1":
-                self.armInfo['y'] -= 3
+                self.armInfo['y'] -= step
             if typeName == "0":
-                self.armInfo['z'] += 1
+                self.armInfo['z'] += step
             if typeName == "2":
-                self.armInfo['z'] -= 1
+                self.armInfo['z'] -= step
             command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
             commandURL = parse.quote(command)
-            self.request.sendControl(commandURL)
-            self.timerAction = Timer(100/1000, self.actionGo, args=[typeName])  # 0.02
-            self.timerAction.start()
+            Thread(target=self.request.sendControl,args=[commandURL]).start()
+            time.sleep(0.05)
+            self.actionGo(typeName)
 
     # 接收到机械臂当前状态信息消息
     def mArmMessageHandle(self, data):

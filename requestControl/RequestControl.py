@@ -7,10 +7,11 @@ class RequestControl:
 
     def sendControl(self, command):
         urlCommand = f'{self.url}{command}'
-        # print(urlCommand)
+        print(urlCommand)
         # 发送GET请求
         try:
             response = requests.get(urlCommand, timeout=1)
+            # response =
             # 检查请求是否成功
             if response.status_code == 200:
                 # 获取响应内容（假设是JSON格式）
