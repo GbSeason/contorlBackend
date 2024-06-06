@@ -61,7 +61,7 @@ class Dispatcher:
                 self.armInfo['z'] -= step
             command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
             commandURL = parse.quote(command)
-            Thread(target=self.request.sendControl,args=[commandURL]).start()
+            Thread(target=self.request.sendControl, args=[commandURL]).start()
             time.sleep(0.05)
             self.actionGo(typeName)
 
@@ -80,18 +80,20 @@ class Dispatcher:
     # 持续识别目标
     def startVideoRecognition(self):
         # print("target--go")
-        if self.video is not None:
-            frame = self.video.currentFrame
-            # print("=== start find apple ====")
-            if frame is not None:
-                # print("=== find apple ====")
-                detector = getApplesDetector()
-                boxes = detector.detectTarget(frame)
-                self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
-                # print(boxes)
-        # 视频识别再次启动 一秒一次
-        self.timer = Timer(0.5, self.startVideoRecognition)
-        self.timer.start()
+        while True:
+            if self.video is not None:
+                frame = self.video.currentFrame
+                # print("=== start find apple ====")
+                if frame is not None:
+                    # print("=== find apple ====")
+                    detector = getApplesDetector()
+                    boxes = detector.detectTarget(frame)
+                    self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
+                    # print(boxes)
+                    # 视频识别再次启动 一秒一次
+            time.sleep(0.1)
+        # self.timer = Timer(0.5, self.startVideoRecognition)
+        # self.timer.start()
 
     # 开启串口配置消息句柄
     def startSerial(self):
@@ -103,7 +105,8 @@ class Dispatcher:
         # 创建视频获取对象--自动启动
         self.video = videoGet()
         # 创建视频识别线程
-        self.startVideoRecognition()
+        Thread(target=self.startVideoRecognition).start()
+        # self.startVideoRecognition()
         # 开启串口通信 ////////暂时不用串口,使用wifi与机械部分通信
         # self.startSerial()
         # 启动webserver,传递视频画面，消息处理句柄
