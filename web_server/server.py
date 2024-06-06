@@ -48,6 +48,10 @@ class webServer:
         def getMessageOnAction(data):
             self.handle(data, True)
 
+        @socketio.on('actionWork')
+        def getMessageOnActionWork(data):
+            self.dispatcher.actionWorkAutomation(data)
+
         @socketio.on('stopAction')
         def getMessageOnAction(data):
             self.dispatcher.actionStop(data)

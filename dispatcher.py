@@ -8,6 +8,8 @@ from web_server import startServer
 from requestControl.RequestControl import RequestControl
 from threading import Timer, Thread
 from urllib import parse
+from target_recognition.MeasureDistance import measure
+from action_work.actionWork import action_1
 
 
 class Dispatcher:
@@ -39,6 +41,14 @@ class Dispatcher:
             motoData = self.request.sendControl(commandURL)
             if type(motoData) is dict:
                 self.mArmMessageHandle(motoData)
+
+    def actionWorkAutomation(self, box):
+        # 开始自动执行作业，首先需要计算出目标距离
+        frames = self.video.getLRFrame()
+        distance = measure(frames[0], box, frames[1])
+        # 根据距离判断是需要靠近目标还是要远离目标
+        if distance > 100: #当距离大于10cm时，需要靠近目标，以当前目标为中心点开始移动机械臂末端
+            action_1(box,distance)
 
     def actionStop(self, typeName):
         self.actionStatus = False
@@ -88,6 +98,7 @@ class Dispatcher:
                     # print("=== find apple ====")
                     detector = getApplesDetector()
                     boxes = detector.detectTarget(frame)
+                    # ************当识别出目标时，需要暂停识别，机械臂动作，等待前端给出指令：继续识别还是开始执行动作************
                     self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
                     # print(boxes)
                     # 视频识别再次启动 一秒一次

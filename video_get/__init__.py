@@ -14,6 +14,9 @@ class videoGet:
     def getCurrentImg(self):
         return self.currentImg
 
+    def getLRFrame(self):
+        return [self.currentFrame, self.currentFrameRight]
+
     def getCurrentFrame(self):
         return self.currentFrame
 
@@ -24,8 +27,8 @@ class videoGet:
         while True:
             ret, frame = cap.read()
             if ret:
-                self.currentFrame = frame[0:480, 0:640]
-                self.currentFrameRight = frame[0:480, 639:640]
+                self.currentFrame = frame[0:479, 0:639]
+                self.currentFrameRight = frame[0:479, 640:1279]
                 # 编码帧为JPEG格式
                 _, frame_jpeg = cv2.imencode('.jpg', self.currentFrame)
                 self.currentImg = frame_jpeg.tobytes()

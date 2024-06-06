@@ -29,6 +29,10 @@ def measure(image_left, template_box, image_right):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(loc_array)
     # 得到目标在两个视图的视差
     x1, x2 = template_box[0], max_loc[0]
+    difference = np.abs(x1 - x2)
+    # ===两个轮廓的视差计算出距离=== 660常数 5焦距===这里数值不准需要调整
+    distance = int(600 / difference * 2.1)
+    return distance
     # # 根据坐标画矩形框表示相似区域
     # for pt in zip(*loc[::-1]):
     #     cv2.rectangle(self.image, pt, (pt[0] + w, pt[1] + h), (0, 255, 0), 2)
