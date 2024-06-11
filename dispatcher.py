@@ -24,6 +24,7 @@ class Dispatcher:
         self.armInfo = {"x": 0, "y": 0, "z": 0}
         # 当前运动状态 True动作执行中  False动作停止
         self.actionStatus = False
+        self.start_recognition = True
 
     # 接收到web端消息
     def webMessageHandle(self, data, isAction):
@@ -46,9 +47,10 @@ class Dispatcher:
         # 开始自动执行作业，首先需要计算出目标距离
         frames = self.video.getLRFrame()
         distance = measure(frames[0], box, frames[1])
+        print(distance)
         # 根据距离判断是需要靠近目标还是要远离目标
-        if distance > 100: #当距离大于10cm时，需要靠近目标，以当前目标为中心点开始移动机械臂末端
-            action_1(box,distance)
+        # if distance > 100: #当距离大于10cm时，需要靠近目标，以当前目标为中心点开始移动机械臂末端
+        #     action_1(box,distance)
 
     def actionStop(self, typeName):
         self.actionStatus = False
@@ -91,16 +93,20 @@ class Dispatcher:
     def startVideoRecognition(self):
         # print("target--go")
         while True:
-            if self.video is not None:
+            if self.video is not None and self.start_recognition:
                 frame = self.video.currentFrame
                 # print("=== start find apple ====")
                 if frame is not None:
                     # print("=== find apple ====")
                     detector = getApplesDetector()
                     boxes = detector.detectTarget(frame)
-                    # ************当识别出目标时，需要暂停识别，机械臂动作，等待前端给出指令：继续识别还是开始执行动作************
-                    self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
                     # print(boxes)
+                    # ************当识别出目标时，需要暂停识别，机械臂动作，等待前端给出指令：继续识别还是开始执行动作************
+                    if len(boxes) > 0:
+                        self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
+                        # self.start_recognition = False
+                    else:
+                        self.webServer.sendWebMessage('findTargets', "[]")
                     # 视频识别再次启动 一秒一次
             time.sleep(0.1)
         # self.timer = Timer(0.5, self.startVideoRecognition)
