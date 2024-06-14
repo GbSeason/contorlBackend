@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 def calculate_target_coordinate_o(cam_x, cam_y, cam_z, cam_roll, cam_pitch, cam_yaw, distance):
     """
     计算摄像头中目标在三维坐标系中的具体坐标
@@ -48,9 +49,13 @@ def calculate_target_coordinate(x, y, z, roll, pitch, yaw, distance):
 
     # Calculate rotation matrix
     rotation_matrix = np.array([
-        [math.cos(yaw_rad) * math.cos(pitch_rad), -math.sin(yaw_rad) * math.cos(roll_rad) + math.cos(yaw_rad) * math.sin(pitch_rad) * math.sin(roll_rad),  math.sin(yaw_rad) * math.sin(roll_rad) + math.cos(yaw_rad) * math.sin(pitch_rad) * math.cos(roll_rad)],
-        [math.sin(yaw_rad) * math.cos(pitch_rad),  math.cos(yaw_rad) * math.cos(roll_rad) + math.sin(yaw_rad) * math.sin(pitch_rad) * math.sin(roll_rad), -math.cos(yaw_rad) * math.sin(roll_rad) + math.sin(yaw_rad) * math.sin(pitch_rad) * math.cos(roll_rad)],
-        [-math.sin(pitch_rad),  math.cos(pitch_rad) * math.sin(roll_rad),  math.cos(pitch_rad) * math.cos(roll_rad)]
+        [math.cos(yaw_rad) * math.cos(pitch_rad),
+         -math.sin(yaw_rad) * math.cos(roll_rad) + math.cos(yaw_rad) * math.sin(pitch_rad) * math.sin(roll_rad),
+         math.sin(yaw_rad) * math.sin(roll_rad) + math.cos(yaw_rad) * math.sin(pitch_rad) * math.cos(roll_rad)],
+        [math.sin(yaw_rad) * math.cos(pitch_rad),
+         math.cos(yaw_rad) * math.cos(roll_rad) + math.sin(yaw_rad) * math.sin(pitch_rad) * math.sin(roll_rad),
+         -math.cos(yaw_rad) * math.sin(roll_rad) + math.sin(yaw_rad) * math.sin(pitch_rad) * math.cos(roll_rad)],
+        [-math.sin(pitch_rad), math.cos(pitch_rad) * math.sin(roll_rad), math.cos(pitch_rad) * math.cos(roll_rad)]
     ])
 
     # Calculate direction vector
@@ -65,9 +70,35 @@ def calculate_target_coordinate(x, y, z, roll, pitch, yaw, distance):
     return target_x, target_y, target_z
 
 
-target_x1, target_y1, target_z1 = calculate_target_coordinate(0, 0, 0, 0, 30, 30, 10)
+def check_point_in_sphere(x, y, z, r):
+    """
+    :param x:
+    :param y:
+    :param z:
+    :param r:球体半径
+    :return:计算xyz坐标点是否在半径为r的球体中，并返回距离
+    """
+    distance = math.sqrt(x ** 2 + y ** 2 + z ** 2)
+    if distance <= r:
+        return True, r - distance
+    else:
+        return False, distance - r
+
+
+"""
+以下为测试代码
+
+target_x1, target_y1, target_z1 = calculate_target_coordinate(0, 0, 0, 0, 30, 30, 15)
 print(f"目标在三维坐标系中的坐标为1: ({target_x1:.2f}, {target_y1:.2f}, {target_z1:.2f})")
 
-target_x, target_y, target_z = calculate_target_coordinate_o(0, 0, 0, 0, 30, 30, 10)
+target_x, target_y, target_z = calculate_target_coordinate_o(0, 0, 0, 0, 30, 30, 15)
 print(f"目标在三维坐标系中的坐标为: ({target_x:.2f}, {target_y:.2f}, {target_z:.2f})")
 
+# 测试
+x = 1
+y = 1
+z = 1
+radius = 5
+is_inside, distance_to_surface = check_point_in_sphere(x, y, z, radius)
+print(is_inside, distance_to_surface)
+"""
