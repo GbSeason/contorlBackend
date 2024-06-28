@@ -9,7 +9,8 @@ from requestControl.RequestControl import RequestControl
 from threading import Timer, Thread
 from urllib import parse
 from target_recognition.MeasureDistance import measure
-from action_work.actionWork import action_1
+# from action_work.actionWork import action_1
+from joint_move import JointMove
 
 
 class Dispatcher:
@@ -22,6 +23,7 @@ class Dispatcher:
         self.request = RequestControl()
         self.command = MArmCommand()
         self.armInfo = {"x": 0, "y": 0, "z": 0}
+        self.armInfoAll = None
         # 当前运动状态 True动作执行中  False动作停止
         self.actionStatus = False
         self.start_recognition = True
@@ -47,6 +49,22 @@ class Dispatcher:
         # 开始自动执行作业，首先需要计算出目标距离
         frames = self.video.getLRFrame()
         distance = measure(frames[0], box, frames[1])
+        # distance是摄像机此时距离目标的位置，具体该如何移动机械臂和地盘，需要计算目标在机械臂坐标系内的坐标
+        # 如果在，读取机械臂参数
+        """
+        机械臂返回参数格式
+        {"T":1051,"x":309.0444117,"y":3.318604879,"z":238.2448043,"b":0.010737866,"s":-0.004601942,"e":1.570796327,"t":3.141592654,"torB":-56,"torS":-20,"torE":0,"torH":0}
+        x、y、z：分别代表末端点X轴、Y轴、Z轴的坐标。
+        b、s、e、t：分别代表基础关节、肩关节、肘关节、末端关节角度，以弧度制形式显示。
+        torB、torS、torE、torH：分别代表基础关节、肩关节、肘关节、末端关节的负载。
+        """
+        # 计算出目标真实坐标
+        JointMove.calculate_target_coordinate(self.armInfoAll['s'], self.armInfoAll['e'], self.armInfoAll['t'],
+                                              self.armInfoAll['b'],0,distance)
+        #判断其是否在操作范围内
+
+        # 如果不在操作范围内，则地盘移动到合适距离内
+
         print(distance)
         # 根据距离判断是需要靠近目标还是要远离目标
         # if distance > 100: #当距离大于10cm时，需要靠近目标，以当前目标为中心点开始移动机械臂末端
@@ -83,6 +101,7 @@ class Dispatcher:
             #  json.loads(data)
             jsonData = data
             if jsonData['T'] and jsonData['T'] == 1051:
+                self.armInfoAll = jsonData
                 self.armInfo['x'] = int(jsonData['x'])
                 self.armInfo['y'] = int(jsonData['y'])
                 self.armInfo['z'] = int(jsonData['z'])
