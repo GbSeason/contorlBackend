@@ -68,8 +68,7 @@ def check_point_in_sphere(x, y, z, r):
         return False, distance - r
 
 
-def calculate_target_coordinate(ja0=0, ja1=0, ja2=0, ja_y=0,
-                                end_z=0, b=0, d=0):
+def calculate_target_coordinate(ja0=0, ja1=0, ja2=0, ja_y=0, b=0, end_z=0, d=0):
     """
     输入关节参数，及识别到的目标的直线距离，计算目标在三维坐标系中的坐标值
     jl0=config.JOINT_L_S, jl1=config.JOINT_L_E, jl2=config.JOINT_L_T,
@@ -98,7 +97,7 @@ def calculate_target_coordinate(ja0=0, ja1=0, ja2=0, ja_y=0,
 
 
 target_xg, target_yg, target_zg = calculate_target_coordinate(np.radians(30), np.radians(10), np.radians(0),
-                                                              np.radians(10), 50, np.radians(0), 100)
+                                                              np.radians(10), np.radians(0), 50, 100)
 print(f"目标在坐标系中的坐标为g: ({target_xg}, {target_yg}, {target_zg})")
 
 # print(np.rad2deg( np.arcsin(0.71)))
