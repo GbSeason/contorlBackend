@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import config
 
 
 def calculate_target_coordinate_g(x, y, z, a, b, d):
@@ -67,35 +68,38 @@ def check_point_in_sphere(x, y, z, r):
         return False, distance - r
 
 
-def calculate_target_coordinate(jl0, jl1, jl2, ja0, ja1, ja2, ja_y, end_z_offset, d):
+def calculate_target_coordinate(ja0=0, ja1=0, ja2=0, ja_y=0,
+                                end_z=0, b=0, d=0):
     """
     输入关节参数，及识别到的目标的直线距离，计算目标在三维坐标系中的坐标值
-    :param jl0: 第一关节的长度
-    :param jl1: 第二关节的长度
-    :param jl2: 第三关节的长度
+    jl0=config.JOINT_L_S, jl1=config.JOINT_L_E, jl2=config.JOINT_L_T,
+    param jl0: 第一关节的长度
+    param jl1: 第二关节的长度
+    param jl2: 第三关节的长度
+    这些参数作为配置项处理
+
     :param ja0: 第一关节的角度 弧度制
     :param ja1: 第二关节的角度 弧度制
     :param ja2: 第三关节的角度 弧度制
     :param ja_y: 肩关节的角度，也就是在xy平面上旋转的角度 弧度制
-    :param end_z_offset: 末端关节(第三关节)上连接的摄像机在z轴方向偏移量
+    :param end_z: 末端关节(第三关节)上连接的摄像机在z轴方向偏移量
     :param d: 识别到目标与摄像机的直线距离
+    :param b: 摄像机可以在xy平面内绕z轴旋转，b为在xy平面内相对x轴旋转的角度
     :return: xyz
     """
-    x, y, z = calculate_joint_coordinate(jl0, jl1, jl2, np.radians(ja0), np.radians(ja1), np.radians(ja2),
-                                         np.radians(ja_y), end_z_offset)
-    ja2_ = np.radians(ja0) + np.radians(ja1) + np.radians(ja2)  # 计算第三关节真正的倾角
-    tx, ty, tz = calculate_target_coordinate_g(x, y, z, ja2_, np.radians(ja_y), d)
+    x, y, z = calculate_joint_coordinate(config.JOINT_L_S, config.JOINT_L_E, config.JOINT_L_T, ja0, ja1, ja2, ja_y,
+                                         end_z)
+    ja2_ = ja0 + ja1 + ja2  # 计算第三关节真正的倾角
+    tx, ty, tz = calculate_target_coordinate_g(x, y, z, ja2_, b, d)
     return tx, ty, tz
 
 
 # target_xg, target_yg, target_zg = calculate_target_coordinate_g(5.60, 6.36, 3.19, 30, 30, 14)
 
 
-target_xg, target_yg, target_zg = calculate_target_coordinate(30, 30, 10,
-                                                              30, 0, 0,
-                                                              0, 5, 10)
+target_xg, target_yg, target_zg = calculate_target_coordinate(np.radians(30), np.radians(10), np.radians(0),
+                                                              np.radians(10), 50, np.radians(0), 100)
 print(f"目标在坐标系中的坐标为g: ({target_xg}, {target_yg}, {target_zg})")
-
 
 # print(np.rad2deg( np.arcsin(0.71)))
 """
