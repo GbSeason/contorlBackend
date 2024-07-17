@@ -59,16 +59,25 @@ class Dispatcher:
         torB、torS、torE、torH：分别代表基础关节、肩关节、肘关节、末端关节的负载。
         """
         # 计算出目标真实坐标
-        JointMove.calculate_target_coordinate(self.armInfoAll['s'], self.armInfoAll['e'], self.armInfoAll['t'],
-                                              self.armInfoAll['b'],0,distance)
-        #判断其是否在操作范围内
-
-        # 如果不在操作范围内，则地盘移动到合适距离内
-
+        tx, ty, tz = JointMove.calculate_target_coordinate(self.armInfoAll['s'], self.armInfoAll['e'],
+                                                           self.armInfoAll['t'],
+                                                           self.armInfoAll['b'], 0, distance)
+        # 判断其是否在操作范围内,返回值为boolean和距离
+        canDo, dist = JointMove.check_point_in_sphere(tx, ty, tz, 40)
+        # 如果不在操作范围内，则底盘移动到合适距离内
+        if canDo is False:
+            # 需要操作底盘移动适当的距离
+            pass
+        else:
+            # 操作部移动到目标位置
+            self.moveToCoordinates(tx, ty, tz)
         print(distance)
         # 根据距离判断是需要靠近目标还是要远离目标
         # if distance > 100: #当距离大于10cm时，需要靠近目标，以当前目标为中心点开始移动机械臂末端
         #     action_1(box,distance)
+
+    def moveToCoordinates(self, tx, ty, tz):
+        self.command.go_XYZ(tx, ty, tz)
 
     def actionStop(self, typeName):
         self.actionStatus = False

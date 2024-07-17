@@ -53,7 +53,7 @@ def calculate_joint_coordinate(jl0, jl1, jl2, ja0, ja1, ja2, ja_y, end_z_offset)
     return x, y, z
 
 
-def check_point_in_sphere(x, y, z, r):
+def check_point_in_sphere(x, y, z, r=60):
     """
     :param x:
     :param y:
