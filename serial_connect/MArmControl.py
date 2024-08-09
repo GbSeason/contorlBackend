@@ -5,6 +5,11 @@ import json
 # 机械臂的坐标轴定义基于右手定则，机械臂的正前方为X轴正方向，机械臂的前方的左侧为Y轴正方向，机械臂的竖直正上方为Z轴正方向。
 class MArmCommand:
     def __init__(self):
+        self.BASE_JOINT = 1  # 基础
+        self.SHOULDER_JOINT = 2  # 肩关节
+        self.ELBOW_JOINT = 3  # 臂关节
+        self.EOAT_JOINT = 4  # 夹爪
+        self.EOAT_HOR_JOINT = 5  # 摄像机
         # 获得机械臂末端点位置坐标和各关节角度、负载的反馈
         self.GET_INFO = {"T": 105}
         # 运动到初始位置
@@ -81,6 +86,12 @@ class MArmCommand:
         else:
             return None
 
+    def joint_go_rad(self, joint, rad):
+        command = {"T": 101, "joint": joint, "rad": rad, "spd": 0, "acc": 10}
+        if joint is not None and rad is not None:
+            return json.dumps(command)
+        else:
+            return None
 # m = MArmCommand()
 # print(m.XYZ_go(10, 20, 5, 500))
 # print(m.XYZ_go_spd(10, 20, 5, 50,200))

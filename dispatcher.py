@@ -10,7 +10,8 @@ from threading import Timer, Thread
 from urllib import parse
 from target_recognition.MeasureDistance import measure
 # from action_work.actionWork import action_1
-from joint_move import JointMove
+from joint_move import JointMoveCalc
+from joint_move.scanMove import scanMove
 
 
 class Dispatcher:
@@ -22,6 +23,7 @@ class Dispatcher:
         # self.serial = None
         self.request = RequestControl()
         self.command = MArmCommand()
+        self.scan_move = scanMove()
         self.armInfo = {"x": 0, "y": 0, "z": 0}
         self.armInfoAll = None
         # 当前运动状态 True动作执行中  False动作停止
@@ -59,11 +61,11 @@ class Dispatcher:
         torB、torS、torE、torH：分别代表基础关节、肩关节、肘关节、末端关节的负载。
         """
         # 计算出目标真实坐标
-        tx, ty, tz = JointMove.calculate_target_coordinate(self.armInfoAll['s'], self.armInfoAll['e'],
+        tx, ty, tz = JointMoveCalc.calculate_target_coordinate(self.armInfoAll['s'], self.armInfoAll['e'],
                                                            self.armInfoAll['t'],
                                                            self.armInfoAll['b'], 0, distance)
         # 判断其是否在操作范围内,返回值为boolean和距离
-        canDo, dist = JointMove.check_point_in_sphere(tx, ty, tz, 40)
+        canDo, dist = JointMoveCalc.check_point_in_sphere(tx, ty, tz, 40)
         # 如果不在操作范围内，则底盘移动到合适距离内
         if canDo is False:
             # 需要操作底盘移动适当的距离
@@ -145,10 +147,15 @@ class Dispatcher:
         pass
         # self.serial = Serials("COM4", self.mArmMessageHandle)
 
+    def startScanMove(self):
+        self.scan_move.startScan()
+
     # 启动所有功能
     def start(self):
         # 创建视频获取对象--自动启动
         self.video = videoGet()
+        # 开始旋转摄像机扫描
+        Thread(target=self.startScanMove).start()
         # 创建视频识别线程
         Thread(target=self.startVideoRecognition).start()
         # self.startVideoRecognition()
