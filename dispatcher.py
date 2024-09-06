@@ -2,10 +2,10 @@ import json
 import time
 from video_get import videoGet
 from target_recognition import getApplesDetector
-# from serial_connect.SerialControl import Serials
+from serial_connect.SerialControl import Serials
 from serial_connect.MArmControl import MArmCommand
 from web_server import startServer
-from requestControl.RequestControl import RequestControl
+# from requestControl.RequestControl import RequestControl
 from threading import Timer, Thread
 from urllib import parse
 from target_recognition.MeasureDistance import measure
@@ -20,17 +20,17 @@ class Dispatcher:
         self.timer = None
         self.timerAction = None
         self.video = None
-        # self.serial = None
-        self.request = RequestControl()
+        self.serial = None
+        # self.request = RequestControl()//不适用
         self.command = MArmCommand()
-        self.scan_move = scanMove()
+        self.scan_move = scanMove(self)
         self.armInfo = {"x": 0, "y": 0, "z": 0}
         self.armInfoAll = None
         # 当前运动状态 True动作执行中  False动作停止
         self.actionStatus = False
-        self.start_recognition = True
+        self.recognition_status = True  # 当前识别是否工作
 
-    # 接收到web端消息
+    # 接收到web端消息 / 串口消息
     def webMessageHandle(self, data, isAction):
         # print(f'dispatcher web: {data}')
         command = ""
@@ -43,37 +43,47 @@ class Dispatcher:
             # self.actionGo(data)
         else:
             commandURL = parse.quote(command)
-            motoData = self.request.sendControl(commandURL)
+            motoData = self.serial.sendMsg(commandURL)
             if type(motoData) is dict:
                 self.mArmMessageHandle(motoData)
 
     def actionWorkAutomation(self, box):
-        # 开始自动执行作业，首先需要计算出目标距离
-        frames = self.video.getLRFrame()
-        distance = measure(frames[0], box, frames[1])
-        # distance是摄像机此时距离目标的位置，具体该如何移动机械臂和地盘，需要计算目标在机械臂坐标系内的坐标
-        # 如果在，读取机械臂参数
-        """
-        机械臂返回参数格式
-        {"T":1051,"x":309.0444117,"y":3.318604879,"z":238.2448043,"b":0.010737866,"s":-0.004601942,"e":1.570796327,"t":3.141592654,"torB":-56,"torS":-20,"torE":0,"torH":0}
-        x、y、z：分别代表末端点X轴、Y轴、Z轴的坐标。
-        b、s、e、t：分别代表基础关节、肩关节、肘关节、末端关节角度，以弧度制形式显示。
-        torB、torS、torE、torH：分别代表基础关节、肩关节、肘关节、末端关节的负载。
-        """
-        # 计算出目标真实坐标
-        tx, ty, tz = JointMoveCalc.calculate_target_coordinate(self.armInfoAll['s'], self.armInfoAll['e'],
-                                                           self.armInfoAll['t'],
-                                                           self.armInfoAll['b'], 0, distance)
-        # 判断其是否在操作范围内,返回值为boolean和距离
-        canDo, dist = JointMoveCalc.check_point_in_sphere(tx, ty, tz, 40)
-        # 如果不在操作范围内，则底盘移动到合适距离内
-        if canDo is False:
-            # 需要操作底盘移动适当的距离
-            pass
+        print(f"开始执行作业动作,目标:{box}")
+        # 首先确认机械臂位置数据是否存在
+        if self.armInfoAll:
+            # 开始自动执行作业，首先需要计算出目标距离
+            frames = self.video.getLRFrame()
+            distance = measure(frames[0], box, frames[1])
+
+
+            # distance是摄像机此时距离目标的位置，具体该如何移动机械臂和地盘，需要计算目标在机械臂坐标系内的坐标
+            # 如果在，读取机械臂参数
+            """
+            机械臂返回参数格式
+            {"T":1051,"x":309.0444117,"y":3.318604879,"z":238.2448043,"b":0.010737866,"s":-0.004601942,"e":1.570796327,"t":3.141592654,"torB":-56,"torS":-20,"torE":0,"torH":0}
+            x、y、z：分别代表末端点X轴、Y轴、Z轴的坐标。
+            b、s、e、t：分别代表基础关节、肩关节、肘关节、末端关节角度，以弧度制形式显示。
+            torB、torS、torE、torH：分别代表基础关节、肩关节、肘关节、末端关节的负载。
+            """
+            # 计算出目标真实坐标
+            tx, ty, tz = JointMoveCalc.calculate_target_coordinate(self.armInfoAll['s'], self.armInfoAll['e'],
+                                                                   self.armInfoAll['t'],
+                                                                   self.armInfoAll['b'], 0, distance)
+            # 判断其是否在操作范围内,返回值为boolean和距离
+            canDo, dist = JointMoveCalc.check_point_in_sphere(tx, ty, tz, 40)
+            # 如果不在操作范围内，则底盘移动到合适距离内
+            if canDo is False:
+                print("目标太远，需要底盘移动")
+                # 需要操作底盘移动适当的距离
+                pass
+            else:
+                # 操作部移动到目标位置
+                self.moveToCoordinates(tx, ty, tz)
+            print(distance)
+            print("作业完成，再次启动目标搜索")
         else:
-            # 操作部移动到目标位置
-            self.moveToCoordinates(tx, ty, tz)
-        print(distance)
+            print("当前机械臂无数据")
+        self.recognition_status = True
         # 根据距离判断是需要靠近目标还是要远离目标
         # if distance > 100: #当距离大于10cm时，需要靠近目标，以当前目标为中心点开始移动机械臂末端
         #     action_1(box,distance)
@@ -102,7 +112,7 @@ class Dispatcher:
                 self.armInfo['z'] -= step
             command = self.command.go_XYZ(self.armInfo['x'], self.armInfo['y'], self.armInfo['z'])
             commandURL = parse.quote(command)
-            Thread(target=self.request.sendControl, args=[commandURL]).start()
+            Thread(target=self.serial.sendMsg, args=[commandURL]).start()
             time.sleep(0.05)
             self.actionGo(typeName)
 
@@ -123,18 +133,24 @@ class Dispatcher:
     def startVideoRecognition(self):
         # print("target--go")
         while True:
-            if self.video is not None and self.start_recognition:
+            if self.video is not None and self.recognition_status:
+                # 捕捉到当前画面
                 frame = self.video.currentFrame
                 # print("=== start find apple ====")
                 if frame is not None:
                     # print("=== find apple ====")
+                    # 创建识别器
                     detector = getApplesDetector()
+                    # 识别目标
                     boxes = detector.detectTarget(frame)
                     # print(boxes)
                     # ************当识别出目标时，需要暂停识别，机械臂动作，等待前端给出指令：继续识别还是开始执行动作************
                     if len(boxes) > 0:
+                        # 如果找到目标，先暂停扫描
+                        self.scan_move.pauseScan()
+                        # 发送目标位置到web端
                         self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
-                        # self.start_recognition = False
+                        self.recognition_status = False
                     else:
                         self.webServer.sendWebMessage('findTargets', "[]")
                     # 视频识别再次启动 一秒一次
@@ -144,8 +160,7 @@ class Dispatcher:
 
     # 开启串口配置消息句柄
     def startSerial(self):
-        pass
-        # self.serial = Serials("COM4", self.mArmMessageHandle)
+        self.serial = Serials(None, self.mArmMessageHandle)  #
 
     def startScanMove(self):
         self.scan_move.startScan()
@@ -160,6 +175,6 @@ class Dispatcher:
         Thread(target=self.startVideoRecognition).start()
         # self.startVideoRecognition()
         # 开启串口通信 ////////暂时不用串口,使用wifi与机械部分通信
-        # self.startSerial()
+        self.startSerial()
         # 启动webserver,传递视频画面，消息处理句柄
         startServer(self.video, self)

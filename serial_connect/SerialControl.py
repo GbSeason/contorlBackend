@@ -1,13 +1,26 @@
 import serial
+import serial.tools.list_ports as lp
+import serial.tools.list_ports_common
 import threading
 
 
 class Serials:
-    def __init__(self, port='COM1', handle=None):
+    def __init__(self, port, handle=None):
         self.handle = handle
         self.serial_ = None
         self.port = port
-        self.startSerial()
+        self.findSerial()
+
+    def findSerial(self):
+        if self.port is None:
+            ports = lp.comports()
+            for i, port in enumerate(ports):
+                if port.description.find("CH34") > 0:
+                    self.port = port.name
+        if self.port:
+            self.startSerial()
+        else:
+            print("串口连接失败,端口错误")
 
     def startSerial(self):
         try:
@@ -35,7 +48,7 @@ class Serials:
 
     def sendMsg(self, command_json):
         cmd = command_json + '\n'
-        print(cmd)
+        print(f"to serial: {cmd}")
         if self.serial_.isOpen():
             self.serial_.write(cmd.encode())
         else:
