@@ -86,12 +86,30 @@ class MArmCommand:
         else:
             return None
 
-    def joint_go_rad(self, joint, rad):
-        command = {"T": 101, "joint": joint, "rad": rad, "spd": 0, "acc": 10}
+    def joint_go_rad(self, joint, rad, spd=0):
+        command = {"T": 101, "joint": joint, "rad": rad, "spd":spd, "acc": 10}
         if joint is not None and rad is not None:
             return json.dumps(command)
         else:
             return None
+
+    #弧度制控制所有关节
+    def joint_all_go_rad_fast(self,base,shoulder,elbow,hand):
+        command = {"T":102,"base":base,"shoulder":shoulder,"elbow":elbow,"hand":hand,"spd":0,"acc":10}
+        if base is not None and shoulder is not None and elbow is not None and hand is not None:
+            return json.dumps(command)
+        else:
+            return None
+
+    #角度制控制所有关节
+    def joint_all_go_angle_fast(self,base,shoulder,elbow,hand):
+        command = {"T":122,"b":base,"s":shoulder,"e":elbow,"h":hand,"spd":0,"acc":10}
+        if base is not None and shoulder is not None and elbow is not None and hand is not None:
+            return json.dumps(command)
+        else:
+            return None
+
+
 # m = MArmCommand()
 # print(m.XYZ_go(10, 20, 5, 500))
 # print(m.XYZ_go_spd(10, 20, 5, 50,200))

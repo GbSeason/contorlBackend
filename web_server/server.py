@@ -13,7 +13,7 @@ class webServer:
         dispatcher.webServer = self
 
     def sendWebMessage(self, type="test", msg="test"):
-        print('to web')
+        # print('to web')
         if type == "binary":
             self.socketio.emit('video', msg, binary=True)
         if type == "msg":
@@ -27,7 +27,7 @@ class webServer:
 
         @app.route("/")
         def client():
-            return render_template("index.html")
+            return "welcome"  # render_template("index.html")
 
         @socketio.on('connect')
         def send_connect(cnt):
@@ -40,6 +40,11 @@ class webServer:
             img = self.video_factory.getCurrentImg()
             emit('video', img, binary=True)
 
+        @socketio.on('getVideoRight')
+        def getVideo(data):
+            img = self.video_factory.getCurrentImgRight()
+            emit('videoRight', img, binary=True)
+
         @socketio.on('message')
         def getMessage(data):
             self.handle(data, False)
@@ -51,6 +56,16 @@ class webServer:
         @socketio.on('actionWork')
         def getMessageOnActionWork(data):
             self.dispatcher.actionWorkAutomation(data)
+
+        @socketio.on('startScanTarget')
+        def startScan(data):
+            print("web开始扫描")
+            self.dispatcher.startScan()
+
+        @socketio.on('stopScanTarget')
+        def stopScan(data):
+            print("web暂停扫描")
+            self.dispatcher.stopScan()
 
         @socketio.on('stopAction')
         def getMessageOnAction(data):

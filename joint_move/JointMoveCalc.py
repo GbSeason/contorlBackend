@@ -10,7 +10,7 @@ def calculate_target_coordinate_g(x, y, z, a, b, d):
     :param y:原点y
     :param z:原点z
     :param a:仰角 弧度制
-    :param b:在xy平面内相对x轴角度 弧度制
+    :param b:摄像头在xy平面内相对x轴角度 弧度制
     :param d:目标点距离观察点的直线距离
     :return: 目标点的坐标
     """
@@ -63,9 +63,9 @@ def check_point_in_sphere(x, y, z, r=60):
     """
     distance = math.sqrt(x ** 2 + y ** 2 + z ** 2)
     if distance <= r:
-        return True, r - distance
+        return True, distance
     else:
-        return False, distance - r
+        return False, distance
 
 
 def calculate_target_coordinate(ja0=0, ja1=0, ja2=0, ja_y=0, b=0, d=0):
@@ -81,12 +81,13 @@ def calculate_target_coordinate(ja0=0, ja1=0, ja2=0, ja_y=0, b=0, d=0):
     :param ja0: 第一关节的角度 弧度制
     :param ja1: 第二关节的角度 弧度制
     :param ja2: 第三关节的角度 弧度制
-    :param ja_y: 肩关节的角度，也就是在xy平面上旋转的角度 弧度制
+    :param ja_y: 基础关节的角度，也就是在xy平面上旋转的角度 弧度制
 
     :param d: 识别到目标与摄像机的直线距离
     :param b: 摄像机可以在xy平面内绕z轴旋转，b为在xy平面内相对x轴旋转的角度
     :return: xyz
     """
+    # 这个算法还有问题，直接使用硬件传回的坐标
     x, y, z = calculate_joint_coordinate(config.JOINT_L_S, config.JOINT_L_E, config.JOINT_L_T, ja0, ja1, ja2, ja_y,
                                          config.JOINT_END_CAM_Z)
     ja2_ = ja0 + ja1 + ja2  # 计算第三关节真正的倾角
@@ -94,21 +95,28 @@ def calculate_target_coordinate(ja0=0, ja1=0, ja2=0, ja_y=0, b=0, d=0):
     return tx, ty, tz
 
 
+def calculate_target_coordinate_by_hard_data(ja0=0, ja1=0, ja2=0, b=0, d=0, x=0, y=0, z=0):
+    ja2_ = ja0 - ja1 - ja2  # 计算第三关节真正的倾角
+    print(f"第三关节真正的倾角:{ja2_}")
+    tx, ty, tz = calculate_target_coordinate_g(x, y, z, ja2_, b, d)
+    return tx, ty, tz
+
+
 # target_xg, target_yg, target_zg = calculate_target_coordinate_g(5.60, 6.36, 3.19, 30, 30, 14)
 
 
-target_xg, target_yg, target_zg = calculate_target_coordinate(np.radians(30), np.radians(10), np.radians(0),
-                                                              np.radians(10), np.radians(0), 100)
-print(f"目标在坐标系中的坐标为g: ({target_xg}, {target_yg}, {target_zg})")
+# target_xg, target_yg, target_zg = calculate_target_coordinate(np.radians(30), np.radians(10), np.radians(0),
+#                                                               np.radians(10), np.radians(0), 100)
+# print(f"目标在坐标系中的坐标为g: ({target_xg}, {target_yg}, {target_zg})")
 
 # print(np.rad2deg( np.arcsin(0.71)))
-"""
-以下为测试代码
-# 测试
-x = 1
-y = 1
-z = 1
-radius = 5
-is_inside, distance_to_surface = check_point_in_sphere(x, y, z, radius)
-print(is_inside, distance_to_surface)
-"""
+# """
+# 以下为测试代码
+# # 测试
+# x = 1
+# y = 1
+# z = 1
+# radius = 5
+# is_inside, distance_to_surface = check_point_in_sphere(x, y, z, radius)
+# print(is_inside, distance_to_surface)
+# """

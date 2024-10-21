@@ -1,1 +1,35 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/html/favicon.ico"><title>vue-template</title><script src="/html/socket.io.js"></script><link href="/html/js/chunk.about.1725603895082.js" rel="prefetch"><link href="/html/css/app.1725603895082.css" rel="preload" as="style"><link href="/html/css/chunk.chunk-vendors.1725603895082.css" rel="preload" as="style"><link href="/html/js/chunk.chunk-vendors.1725603895082.js" rel="preload" as="script"><link href="/html/js/jsapp.1725603895082.js" rel="preload" as="script"><link href="/html/css/chunk.chunk-vendors.1725603895082.css" rel="stylesheet"><link href="/html/css/app.1725603895082.css" rel="stylesheet"></head><body><noscript><strong>We're sorry but vue-template doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="app"></div><script src="/html/js/chunk.chunk-vendors.1725603895082.js"></script><script src="/html/js/jsapp.1725603895082.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDO在线数据</title>
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <link rel="stylesheet" href="/css/jquery-ui.css">
+<!--    <link rel="stylesheet" href="static/css/jquery.ui.dialog.minmax.css">-->
+    <link rel="stylesheet" href="/css/index_element.css">
+    <link rel="stylesheet" href="/css/mainView.css">
+    <script type="text/javascript">
+        var rand = `?version=${Math.random()}`
+    </script>
+</head>
+<body class="main-bg">
+<!-- <img src="./static/icon.png" width="50" height="50"> -->
+<div id="loading_main" style="display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;">
+    <div style="height: 50px; width: 200px; text-align: center; background-color: #228d68;
+            border-radius: 0px; display: flex; flex-direction: column; justify-content: center;">
+        <label style="padding: 10px 20px;color: #FFF;">
+            加载中... <label id="loading_main_rate"></label>
+        </label>
+        <div id="loading_line" style="width: 0%;height:9px;background-color: #8febc5;position: relative;"></div>
+    </div>
+</div>
+<div id="App">
+    <main-view ref="mainView"></main-view>
+</div>
+<script type="text/javascript" src="/js/import.js?version=100214"></script>
+</body>
+</html>

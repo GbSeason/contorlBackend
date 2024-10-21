@@ -6,8 +6,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 class scanMove:
     def __init__(self, dispatcher):
         self.command = MArmCommand()
-        self.head_h = [-0.5, -0.05, 0.4, 0.85, 1.3]  # 摄像头左右旋转的范围，5步循环
-        self.head_v = [2.2, 2.67, 3.14, 3.57, 4]  # 摄像头上下旋转的范围，5步循环
+        self.head_h = [-0.9, -0.49, 0, 0.45, 0.9]  # 摄像头左右旋转的范围，5步循环
+        self.head_v = [3.05, 3.05, 3.14, 3.25, 3.25]  # 摄像头上下旋转的范围，5步循环
         self.h_rad_index = 0
         self.v_rad_index = 0
         self.h_dir = 1
@@ -50,3 +50,8 @@ class scanMove:
 
     def startScan(self):
         self.scheduler.start()
+
+    def go_to_init_postion(self):
+        command_mv_str = self.command.joint_all_go_angle_fast(0, -60, 150, 180)
+        self.dispatcher.serial.sendMsg(command_mv_str)
+

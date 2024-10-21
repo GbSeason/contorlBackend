@@ -6,6 +6,7 @@ import threading
 
 class Serials:
     def __init__(self, port, handle=None):
+        serial.tools.list_ports.comports()
         self.handle = handle
         self.serial_ = None
         self.port = port
@@ -15,8 +16,9 @@ class Serials:
         if self.port is None:
             ports = lp.comports()
             for i, port in enumerate(ports):
-                if port.description.find("CH34") > 0:
-                    self.port = port.name
+                print(f"串口列表：{port.description} {port[0]}")
+                if port.description.find("UART Bridge") > 0:
+                    self.port = port[0]
         if self.port:
             self.startSerial()
         else:
@@ -48,12 +50,15 @@ class Serials:
 
     def sendMsg(self, command_json):
         cmd = command_json + '\n'
-        print(f"to serial: {cmd}")
-        if self.serial_.isOpen():
-            self.serial_.write(cmd.encode())
+        # print(f"to serial: {cmd}")
+        if self.serial_ is not None:
+            if self.serial_.isOpen():
+                self.serial_.write(cmd.encode("utf-8"))
+            else:
+                self.serial_.open()
+                self.serial_.write(cmd.encode("utf-8"))
         else:
-            self.serial_.open()
-            self.serial_.write(cmd.encode())
+            print("serial is None")
 
     def close(self):
         if self.serial_.isOpen():
