@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1920"
+   height="1080"
+   viewBox="0 0 507.99999 285.75"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="main_bg.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="0.7046647"
+     inkscape:cx="778.38439"
+     inkscape:cy="561.25984"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient34"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#42ffab;stop-opacity:1;"
+         offset="0"
+         id="stop33" />
+      <stop
+         style="stop-color:#00e655;stop-opacity:0;"
+         offset="1"
+         id="stop34" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient32"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#f9c100;stop-opacity:0.67625898;"
+         offset="0"
+         id="stop31" />
+      <stop
+         style="stop-color:#ceea63;stop-opacity:0;"
+         offset="1"
+         id="stop32" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient25"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#00bdbd;stop-opacity:1;"
+         offset="0"
+         id="stop25" />
+      <stop
+         style="stop-color:#008080;stop-opacity:0;"
+         offset="1"
+         id="stop26" />
+    </linearGradient>
+    <linearGradient
+       id="swatch6"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop6" />
+    </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient25"
+       id="radialGradient26"
+       cx="108.66972"
+       cy="134.96028"
+       fx="108.66972"
+       fy="134.96028"
+       r="60.508354"
+       gradientTransform="matrix(2.6316646,2.3206586,-4.0346642,2.3160267,322.03711,-460.84785)"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient32"
+       id="radialGradient26-9"
+       cx="171.56224"
+       cy="46.508953"
+       fx="171.56224"
+       fy="46.508953"
+       r="60.508354"
+       gradientTransform="matrix(2.8726387,1.9823306,-3.2221843,2.3636001,69.680588,-414.79474)"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient34"
+       id="radialGradient26-9-4"
+       cx="187.77107"
+       cy="126.62278"
+       fx="187.77107"
+       fy="126.62278"
+       r="60.508354"
+       gradientTransform="matrix(6.18567,-0.08780909,0.10481588,3.7319277,-917.68046,-211.8845)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="图层 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:url(#radialGradient26);fill-opacity:1;stroke:none;stroke-width:3.08479;stroke-opacity:1"
+       id="rect1"
+       width="508"
+       height="285.75"
+       x="0"
+       y="0" />
+    <rect
+       style="fill:url(#radialGradient26-9);fill-opacity:1;stroke:none;stroke-width:3.08479;stroke-opacity:1"
+       id="rect1-4"
+       width="508"
+       height="285.75"
+       x="0"
+       y="0"
+       inkscape:label="rect1-4" />
+    <rect
+       style="fill:url(#radialGradient26-9-4);fill-opacity:1;stroke:none;stroke-width:3.08479;stroke-opacity:1"
+       id="rect1-4-7"
+       width="508"
+       height="285.75"
+       x="0"
+       y="0" />
+  </g>
+</svg>

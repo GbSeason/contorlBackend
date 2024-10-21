@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+        
+        <!-- Babylon.js -->
+        <script src="dat.gui.min.js"></script>
+        <script src="Assets.js"></script>
+        <script src="recast.js"></script>
+        <script src="ammo.js"></script>
+        <script src="HavokPhysics_umd.js"></script>
+        <script src="cannon.js"></script>
+        <script src="Oimo.js"></script>
+        <script src="earcut.min.js"></script>
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+        <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+            
+            #canvasZone {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+<body>
+    <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        }
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+            scene.clearColor = BABYLON.Color3.Purple();
+        
+            var camera = new BABYLON.ArcRotateCamera("Camera", 3 * Math.PI / 2, Math.PI / 2, 50, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+        
+            var light1 = new BABYLON.DirectionalLight("light1", new BABYLON.Vector3(1, 1, 1), scene);
+            var light2 = new BABYLON.HemisphericLight("light2", new BABYLON.Vector3(1, -3, 2), scene);
+        
+            light1.intensity = 0.5;
+        
+            // Pivot
+            var cylinder = BABYLON.MeshBuilder.CreateCylinder("cylinder", {diameter:4, height: 12}, scene);
+            var greenMat = new BABYLON.StandardMaterial("green", scene);
+            greenMat.diffuseColor = new BABYLON.Color3.Green();
+            cylinder.material = greenMat;
+            
+            //
+            var box = BABYLON.MeshBuilder.CreateBox("Box", {height: 16, width:8, depth:4}, scene);
+            box.position = new BABYLON.Vector3(6, 0, 0);
+            var blueMat = new BABYLON.StandardMaterial("blue", scene);
+            blueMat.diffuseColor = new BABYLON.Color3.Blue();
+            box.material = blueMat;
+        
+            // Physics
+            scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), new BABYLON.CannonJSPlugin());
+            //scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), new BABYLON.OimoJSPlugin());
+            //scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), new BABYLON.AmmoJSPlugin());
+            
+            // Add Imposters
+            box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 2 }, scene);
+            cylinder.physicsImpostor = new BABYLON.PhysicsImpostor(cylinder, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0}, scene);
+           
+            
+            //Add Joint
+            var joint1 = new BABYLON.PhysicsJoint(BABYLON.PhysicsJoint.HingeJoint, {  
+                mainPivot: new BABYLON.Vector3(0, 0, 0),
+                connectedPivot: new BABYLON.Vector3(-6, 0, 0),
+                mainAxis: new BABYLON.Vector3(0, 1, 0),
+                connectedAxis: new BABYLON.Vector3(0, 1, 0),
+                nativeParams: {
+                }
+            }); 
+        
+            cylinder.physicsImpostor.addJoint(box.physicsImpostor, joint1); 
+            
+            //Impulse Settings
+            var impulseDirection = new BABYLON.Vector3(0, 0, 1);
+            var impulseMagnitude = 5;
+            var contactLocalRefPoint = new BABYLON.Vector3(0, 0, 0);
+        
+            var pulse = function() {        
+                box.physicsImpostor.applyImpulse(impulseDirection.scale(impulseMagnitude), box.getAbsolutePosition().add(contactLocalRefPoint));
+            }
+            
+            //GUI
+        	
+        	var changeX = function(value) {
+        		impulseDirection.x = value;
+        	}
+        
+            var changeY = function(value) {
+        		impulseDirection.y = value;
+        	}
+            
+            var changeZ = function(value) {
+        		impulseDirection.z = value;
+        	}
+        
+            var magnitude = function(value) {
+                impulseMagnitude = value;
+            }
+        
+            var contactX = function(value) {
+        		contactLocalRefPoint.x = value;
+        	}
+        
+            var contactY = function(value) {
+        		contactLocalRefPoint.y = value;
+        	}
+        
+            var contactZ = function(value) {
+        		contactLocalRefPoint.z = value;
+        	}
+        	
+            var displayDValue = function(value) {
+                return Math.floor(value * 100) / 100;
+            }
+        
+            var displayMValue = function(value) {
+                return Math.floor(value);
+            }
+        
+        	
+        	var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        
+            var selectBox = new BABYLON.GUI.SelectionPanel("spi");
+            selectBox.width = 0.25;
+            selectBox.height = 0.8;
+            selectBox.background = "#1388AF";
+            selectBox.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            selectBox.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+             
+            advancedTexture.addControl(selectBox);
+        
+            var impulseMGroup = new BABYLON.GUI.SliderGroup("Impulse Magnitude", "S");
+        	impulseMGroup.addSlider("Value", magnitude, "units", 0, 100, 5, displayMValue);
+        	
+        	var impulseDGroup = new BABYLON.GUI.SliderGroup("Impulse Direction", "S");
+        	impulseDGroup.addSlider("X", changeX, "units", -1, 1, 1, displayDValue);
+            impulseDGroup.addSlider("Y", changeY, "units", -1, 1, 0, displayDValue);
+            impulseDGroup.addSlider("Z", changeZ, "units", -1, 1, 0, displayDValue);
+        
+            var contactGroup = new BABYLON.GUI.SliderGroup("Contact Position", "S");
+        	contactGroup.addSlider("X", contactX, "units", -2, 2, 0, displayDValue);
+            contactGroup.addSlider("Y", contactY, "units", -2, 2, 0, displayDValue);
+            contactGroup.addSlider("Z", contactZ, "units", -2, 2, 0, displayDValue); 
+        
+            selectBox.addGroup(impulseMGroup);
+            selectBox.addGroup(impulseDGroup);
+            selectBox.addGroup(contactGroup);
+        
+            var button = BABYLON.GUI.Button.CreateSimpleButton("but", "Apply Impulse");
+            button.width = 0.2;
+            button.height = "40px";
+            button.color = "white";
+            button.background = "#1388AF";
+            button.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+            button.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+            button.top = "-10px";
+        
+            button.onPointerClickObservable.add(pulse)
+            advancedTexture.addControl(button);
+        
+            return scene;
+        }
+                window.initFunction = async function() {
+                    await Ammo();
+                    
+                    
+                    var asyncEngineCreation = async function() {
+                        try {
+                        return createDefaultEngine();
+                        } catch(e) {
+                        console.log("the available createEngine function failed. Creating the default engine instead");
+                        return createDefaultEngine();
+                        }
+                    }
+
+                    window.engine = await asyncEngineCreation();
+        if (!engine) throw 'engine should not be null.';
+        startRenderLoop(engine, canvas);
+        window.scene = createScene();};
+        initFunction().then(() => {sceneToRender = scene                    
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
