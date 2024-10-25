@@ -6,6 +6,7 @@ import numpy as np
 
 # Load the YOLOv8 model
 class detectApple:
+    """目标识别"""
     def __init__(self):
         self.model = YOLO('./models/best.pt')
 

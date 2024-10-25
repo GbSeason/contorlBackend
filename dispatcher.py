@@ -31,7 +31,7 @@ class Dispatcher:
         # 当前运动状态 True动作执行中  False动作停止
         self.actionStatus = False
         self.recognition_status = True  # 当前识别是否工作
-        self.current_detect_img = []  # 当前识别到的目标画面区域
+        self.current_detect_img_box_frame = None  # 当前识别到的目标画面区域
 
     # 接收到web端消息 / 串口消息
     def webMessageHandle(self, data, isAction):
@@ -64,9 +64,11 @@ class Dispatcher:
             # 如果在，读取机械臂参数
             """
             机械臂返回参数格式
-            {"T":1051,"x":309.0444117,"y":3.318604879,"z":238.2448043,"b":0.010737866,"s":-0.004601942,"e":1.570796327,"t":3.141592654,"torB":-56,"torS":-20,"torE":0,"torH":0}
+            {"T":1051,"x":309.0444117,"y":3.318604879,"z":238.2448043,
+            "b":0.010737866,"s":-0.004601942,"e":1.570796327, "t":3.141592654,"h":3.141592654,
+            "torB":-56,"torS":-20,"torE":0,"torH":0}
             x、y、z：分别代表末端点X轴、Y轴、Z轴的坐标。
-            b、s、e、t：分别代表基础关节、肩关节、肘关节、末端关节角度，以弧度制形式显示。
+            b、s、e、t：分别代表基础关节、肩关节、肘关节、末端关节、摄像机水平关节角度，以弧度制形式显示。
             torB、torS、torE、torH：分别代表基础关节、肩关节、肘关节、末端关节的负载。
             """
             # 计算出目标真实坐标
@@ -149,64 +151,84 @@ class Dispatcher:
                 # self.webServer.sendWebMessage('info', json.dumps(self.armInfo))
                 # print(f'current arm info is :x{self.armInfo['x']}, y{self.armInfo['y']}, z{self.armInfo['z']}')
 
-    # 持续识别目标
+    def on_scan_step_complete(self):
+        """当每一步扫描动作完成，需要等待视频识别结果"""
+        self.startVideoRecognition()
+
+    #
     def startVideoRecognition(self):
+        """识别目标"""
         # print("target--go")
         # 创建识别器
         detector = getApplesDetector()
-        while True:
-            if self.video is not None and self.recognition_status:
-                # 捕捉到当前画面
-                frame = self.video.currentFrame
-                # print("=== start find apple ====")
-                if frame is not None:
-                    # print("=== find apple ====")
-                    # 识别目标
-                    boxes = detector.detectTarget(frame)
-                    print(boxes)
-                    # ************当识别出目标时，需要暂停识别，机械臂动作，等待前端给出指令：继续识别还是开始执行动作************
-                    if len(boxes) > 0:
-                        # 如果找到目标，先暂停扫描动作
-                        self.stopScan()
-                        # 发送目标位置到web端
-                        print("找到目标")
-                        # 先确认左右摄像机目标是否正确，计算目标距离，如果返回-1说明目标左右不匹配
-                        frames = self.video.getLRFrame()
-                        box_position = boxes[0]['frame']  # 只取第一个目标
-                        # 保存当前识别出来的目标画面数据，使用左侧摄像机识别画面
-                        x, y, w, h = int(box_position[0]), int(box_position[1]), int(box_position[2]), int(
-                            box_position[3])
-                        top = int(y - h / 2)
-                        left = int(x - w / 2)
-                        print(top, left, w, h)
-                        self.current_detect_img = frames[0][top: top + h, left: left + w]
-                        # 计算目标距离 和右摄像机画面中目标位置
-                        distance, right_position = measure(frames[0], [x, y, w, h], frames[1])
-                        if distance != -1:
-                            print(f"距离摄像头距离 {distance}")
-                            # 如果是居中的，则下面两个距离应该基本相等
-                            left_l = 640 - box_position[0]  # 左视图目标距离右边框距离 px
-                            right_l = right_position[0]  # 右视图目标距离左边框距离 px
-                            print(f"目标是否在中心{math.fabs(left_l - right_l)}, {math.fabs(y - 320)}")
-                            if math.fabs(left_l - right_l) < 5 and math.fabs(y - 320) < 10:  # 左右和上下都要基本居中
-                                # 再准备移动机械臂
-                                self.actionWorkAutomation(box_position, distance)
-                                self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
-                                timer_go_back = Timer(2, self.scan_move.go_to_init_postion)
-                                timer_go_back.start()
-                            else:
-                                # 否则要先将目标对准摄像机法线
-                                self.moveToCenter(left_l - right_l)
-                        else:
-                            print("---目标无效---")
-                        # self.recognition_status = False  # false不再识别目标
-                    else:
-                        self.webServer.sendWebMessage('findTargets', "[]")
+        if self.video is not None:
+            # 捕捉到当前画面
+            frame = self.video.currentFrame
+            # print("=== start find apple ====")
+            if frame is not None:
+                # print("=== find apple ====")
+                # 识别目标
+                boxes = detector.detectTarget(frame)
+                print(boxes)
+                # ************当识别出目标时，需要暂停识别，机械臂动作，等待前端给出指令：继续识别还是开始执行动作************
+                if len(boxes) > 0:
+                    # 如果找到目标，先暂停扫描动作
+                    self.stopScan()
+                    # 发送目标位置到web端
+                    print("找到目标")
+                    # 先确认左右摄像机目标是否正确，计算目标距离，如果返回-1说明目标左右不匹配
+                    frames = self.video.getLRFrame()
+                    box_position = boxes[0]['frame']  # 只取第一个目标
+                    # 保存当前识别出来的目标画面数据，使用左侧摄像机识别画面
+                    x, y, w, h = int(box_position[0]), int(box_position[1]), int(box_position[2]), int(
+                        box_position[3])
+                    top = int(y - h / 2)
+                    left = int(x - w / 2)
+                    print(top, left, w, h)
+                    self.current_detect_img_box_frame = frames[0][top: top + h, left: left + w]
+                    # 计算目标距离 和右摄像机画面中目标位置
+                    distance, right_position = measure(frames[0], [x, y, w, h], frames[1])
+                    if distance != -1:
+                        print(f"距离摄像头距离 {distance}")
+                        if distance < 500:
+                            # 如果距离小于500mm，可以执行操作
+                            # 先运动机械臂，使机械臂的末端关节处于原始位置，摄像头水平和垂直角度都是零度
+                            self.reset_robot_when_target_is_center()
 
-                    # 视频识别再次启动 一秒一次
-            time.sleep(0.1)
-        # self.timer = Timer(0.5, self.startVideoRecognition)
-        # self.timer.start()
+                        # # 如果是居中的，则下面两个距离应该基本相等
+                        # left_l = 640 - box_position[0]  # 左视图目标距离右边框距离 px
+                        # right_l = right_position[0]  # 右视图目标距离左边框距离 px
+                        # print(f"目标是否在中心{math.fabs(left_l - right_l)}, {math.fabs(y - 320)}")
+                        # if math.fabs(left_l - right_l) < 5 and math.fabs(y - 320) < 10:  # 左右和上下都要基本居中
+                        #     # 再准备移动机械臂
+                        #     self.actionWorkAutomation(box_position, distance)
+                        #     self.webServer.sendWebMessage('findTargets', json.dumps(boxes))
+                        #     timer_go_back = Timer(2, self.scan_move.go_to_init_position)
+                        #     timer_go_back.start()
+                        # else:
+                        #     # 否则要先将目标对准摄像机法线
+                        #     self.moveToCenter(left_l - right_l)
+                    else:
+                        print("---目标无效---")
+                    # self.recognition_status = False  # false不再识别目标
+                else:
+                    self.webServer.sendWebMessage('findTargets', "[]")
+
+    def reset_robot_when_target_is_center(self):
+        """通过目标追踪算法，移动机械臂，
+        最终使末端复位，目标处于画面中间"""
+        if self.current_detect_img_box_frame is not None:
+            # 开始转动摄像机水平方向 先看摄像机水平角度
+            rad_h = self.armInfoAll['h']
+            # 每次旋转0.1弧度
+            count = int(rad_h / 0.1)
+            for i in range(count):
+                # 生成命令，执行后查看目标在那边，然后调用base关节补偿
+                command_mh_str = self.command.joint_go_rad(self.command.EOAT_HOR_JOINT, rad_h - 0.1)
+
+            # frames = self.video.getLRFrame()
+
+
 
     def moveToCenter(self, dir):
         rad_h = self.armInfoAll['h']
@@ -234,7 +256,7 @@ class Dispatcher:
         self.scan_move.startScan()
 
     def getArmPosition(self):
-        # 获取机械臂当前数据
+        """获取机械臂当前数据"""
         self.serial.sendMsg(self.command.get_info())
 
     # 启动所有功能
@@ -245,7 +267,7 @@ class Dispatcher:
         # 开启串口通信 ///////
         self.startSerial()
 
-        self.scan_move.go_to_init_postion()
+        self.scan_move.go_to_init_position()
 
         # 开始旋转摄像机扫描
         Thread(target=self.startScanMove).start()
