@@ -163,7 +163,7 @@ class Dispatcher:
         detector = getApplesDetector()
         if self.video is not None:
             # 捕捉到当前画面
-            frame = self.video.currentFrame
+            frame = self.video.currentFrameLeft
             # print("=== start find apple ====")
             if frame is not None:
                 # print("=== find apple ====")

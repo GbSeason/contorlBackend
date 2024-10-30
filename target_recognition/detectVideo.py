@@ -12,7 +12,7 @@ class detectApple:
 
     def detectTarget(self, frame):
         # print(height, width)
-        results = self.model(frame, verbose=False)
+        results = self.model.predict(frame, verbose=False)
         # Visualize the results on the frame
         # annotated_frame = results[0].plot()
         boxes = []
